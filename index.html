@@ -424,7 +424,7 @@
 
         setStatus("", "Rendering…");
 
-        // const flippContainer = resetFlippContainer();
+        const flippContainer = resetFlippContainer();
 
         try {
           // This mirrors your “load + query params” logic, but uses the current URL we just updated.
@@ -682,7 +682,7 @@
 
   body.appendChild(list);
   panel.append(header, body);
-  document.documentElement.appendChild(panel);
+  //document.documentElement.appendChild(panel);
 
   // Drag main panel
   let drag = null;
