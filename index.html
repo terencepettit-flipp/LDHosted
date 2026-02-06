@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hosted previewer</title>
+
+    <!-- Flipp SDK -->
+    <script
+      src="https://aq.flippenterprise.net/6737/iframe.js"
+      id="flipp-storefront-script"
+    ></script>
+
+    <style>
+      :root {
+        --bg: #0b0f17;
+        --panel: rgba(255, 255, 255, 0.07);
+        --panel2: rgba(255, 255, 255, 0.05);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.68);
+        --border: rgba(255, 255, 255, 0.12);
+        --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+        --radius: 18px;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+        color: var(--text);
+        background: radial-gradient(1200px 600px at 20% 0%, rgba(104, 156, 255, 0.12), transparent 50%),
+          radial-gradient(1000px 700px at 90% 20%, rgba(255, 126, 179, 0.10), transparent 55%),
+          var(--bg);
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 18px;
+      }
+
+      details.controls {
+        background: linear-gradient(180deg, var(--panel), var(--panel2));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: clip;
+      }
+
+      summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+      }
+      summary::-webkit-details-marker { display: none; }
+
+      .summary-left {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .title {
+        font-size: 14px;
+        letter-spacing: 0.2px;
+        font-weight: 700;
+      }
+      .subtitle {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .chev {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        display: grid;
+        place-items: center;
+        background: rgba(255,255,255,0.04);
+        transition: transform 180ms ease;
+      }
+      details[open] .chev { transform: rotate(180deg); }
+
+      .controls-body {
+        padding: 0 16px 16px 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .field {
+        grid-column: span 4;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field.wide { grid-column: span 12; }
+
+      label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      input {
+        width: 100%;
+        padding: 12px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.18);
+        color: var(--text);
+        outline: none;
+      }
+      input:focus {
+        border-color: rgba(104, 156, 255, 0.55);
+        box-shadow: 0 0 0 4px rgba(104, 156, 255, 0.16);
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-top: 12px;
+      }
+
+      button {
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text);
+        border-radius: 14px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-weight: 650;
+      }
+      button.primary {
+        background: linear-gradient(180deg, rgba(104,156,255,0.35), rgba(104,156,255,0.18));
+        border-color: rgba(104,156,255,0.55);
+      }
+      button:active { transform: translateY(1px); }
+
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .main {
+        margin-top: 14px;
+        background: linear-gradient(180deg, var(--panel), var(--panel2));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: clip;
+      }
+
+      .main-header {
+        padding: 14px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .status {
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.25);
+      }
+      .dot.ok { background: rgba(88, 255, 170, 0.7); }
+      .dot.err { background: rgba(255, 110, 110, 0.8); }
+
+      .main-body {
+        padding: 12px;
+      }
+
+      /* This div is where Flipp.Storefront renders */
+      #flipp-container {
+        min-height: 70vh;
+        background: rgba(0, 0, 0, 0.12);
+        border: 1px dashed rgba(255,255,255,0.14);
+        border-radius: 16px;
+        padding: 10px;
+      }
+
+      @media (max-width: 900px) {
+        .field { grid-column: span 12; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <!-- 1) Retractable controls -->
+      <details class="controls" open hidden>
+        <summary>
+          <div class="summary-left">
+            <div class="title">Parameters</div>
+            <div class="subtitle">Set merchant values, then click Render</div>
+          </div>
+          <div class="chev" aria-hidden="true">⌃</div>
+        </summary>
+
+        <div class="controls-body">
+          <div class="grid">
+            <div class="field">
+              <label for="merchantId">Merchant ID</label>
+              <input id="merchantId" inputmode="numeric" placeholder="e.g. 6737" />
+            </div>
+
+            <div class="field">
+              <label for="merchantNameIdentifier">Merchant name identifier</label>
+              <input id="merchantNameIdentifier" placeholder="e.g. liquormart" />
+            </div>
+
+            <div class="field">
+              <label for="accessToken">Access token</label>
+              <input id="accessToken" placeholder="e.g. f2a3a3d8..." />
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="renderBtn">Render</button>
+            <button id="copyLinkBtn" type="button">Copy link with params</button>
+            <span class="hint" id="hint"></span>
+          </div>
+        </div>
+      </details>
+
+      <!-- 2) Main display section -->
+      <section class="main" aria-label="Storefront">
+        <div class="main-header">
+          <div>
+            <div class="title">Storefront</div>
+            <div class="subtitle">Renders into the container below</div>
+          </div>
+          <div class="status" id="status">
+            <span class="dot" id="dot"></span>
+            <span id="statusText">Idle</span>
+          </div>
+        </div>
+
+        <div class="main-body">
+          <div id="flipp-container"></div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // ---------- Helpers ----------
+      function setStatus(kind, text) {
+        const dot = document.getElementById("dot");
+        const statusText = document.getElementById("statusText");
+        dot.classList.remove("ok", "err");
+        if (kind === "ok") dot.classList.add("ok");
+        if (kind === "err") dot.classList.add("err");
+        statusText.textContent = text;
+      }
+
+      function getQueryParam(param, defaultValue) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param) || defaultValue;
+      }
+
+      function setQueryParams({ accessToken, merchantId, merchantNameIdentifier }) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("accessToken", accessToken);
+        url.searchParams.set("merchantId", merchantId);
+        url.searchParams.set("merchantNameIdentifier", merchantNameIdentifier);
+        history.replaceState({}, "", url.toString());
+        return url.toString();
+      }
+
+      function waitForFlippSDK({ timeoutMs = 8000, pollMs = 50 } = {}) {
+        const started = Date.now();
+        return new Promise((resolve, reject) => {
+          const t = setInterval(() => {
+            const ok = window.Flipp && window.Flipp.Storefront;
+            if (ok) {
+              clearInterval(t);
+              resolve();
+              return;
+            }
+            if (Date.now() - started > timeoutMs) {
+              clearInterval(t);
+              reject(new Error("Flipp SDK not available (timed out)"));
+            }
+          }, pollMs);
+        });
+      }
+
+      // Recreate container to force a clean render without relying on SDK-specific teardown APIs
+      function resetFlippContainer() {
+        const parent = document.querySelector(".main-body");
+        const old = document.getElementById("flipp-container");
+        const fresh = document.createElement("div");
+        fresh.id = "flipp-container";
+        old.replaceWith(fresh);
+        return fresh;
+      }
+
+      // ---------- Your delegates (same as your sample, with a small fix) ----------
+      function getCustomElements(item) {
+        console.log("customElements Item clicked on: ", item.sku);
+        return {
+          slot2: [
+            {
+              type: "img",
+              text: "SLOT 2 IMAGE",
+              src: "https://i.pinimg.com/originals/64/a6/79/64a679f63aca3316466b10448dec73e6.gif",
+            },
+          ],
+        };
+      }
+
+      function getMerchantCartOptions(items, storeCode) {
+        const cartOptionsArray = [];
+        items.forEach((i) => {
+          cartOptionsArray.push(getMerchantCartOptionForItem(i.sku, storeCode));
+        });
+        return cartOptionsArray;
+      }
+
+      function getMerchantCartOptionForItem(itemSku, storeCode) {
+        return [
+          {
+            id: "1234",
+            cartabilityType: 1,
+            label: {
+              "en-US": "Add To Cart",
+              "en-CA": "Add To Cart",
+              "fr-CA": "Ajouter au panier",
+            },
+          },
+        ];
+      }
+
+      function addToMerchantCart(item, cartOption) {
+        console.log("Item ", item, " was added with the option ", cartOption);
+        return true;
+      }
+
+      function getCurrentQuantityLogger(item, storeCode) {
+        const quantity = 3;
+        console.log("Item ", item, " checked for existing quantity");
+        return quantity;
+      }
+    
+      // Define analytics functions
+      function analyticsEngagement(e) {
+          // Process engagement data
+          console.log("Engagement data:", e);
+      }
+
+      function analyticsItemClick(e) {
+          // Process item click data
+          console.log("Item click data:", e);
+      }
+
+      function analyticsItemView(e) {
+          // Process item view data
+          console.log("Item view data:", e);
+      }
+
+      function analyticsOpen(e) {
+          // Process open data
+          console.log("Open data:", e);
+      }
+
+      function analyticsFlyerView(e) {
+          // Process flyer view data
+          console.log("Flyer view data:", e);
+      }
+
+      // ---------- Rendering ----------
+      async function renderStorefrontFromInputs() {
+        const merchantIdEl = document.getElementById("merchantId");
+        const merchantNameIdentifierEl = document.getElementById("merchantNameIdentifier");
+        const accessTokenEl = document.getElementById("accessToken");
+        const hint = document.getElementById("hint");
+
+        const merchantId = merchantIdEl.value.trim();
+        const merchantNameIdentifier = merchantNameIdentifierEl.value.trim();
+        const accessToken = accessTokenEl.value.trim();
+
+        hint.textContent = "";
+
+        if (!merchantId || !merchantNameIdentifier || !accessToken) {
+          setStatus("err", "Missing required inputs");
+          hint.textContent = "Fill all three fields.";
+          return;
+        }
+
+        // Push values into the URL (so your original query-string pattern still applies)
+        const shareUrl = setQueryParams({ accessToken, merchantId, merchantNameIdentifier });
+
+        setStatus("", "Loading SDK…");
+        try {
+          await waitForFlippSDK();
+        } catch (e) {
+          console.error(e);
+          setStatus("err", "SDK not available");
+          hint.textContent = "Check the iframe.js URL and network access.";
+          return;
+        }
+
+        setStatus("", "Rendering…");
+
+        const flippContainer = resetFlippContainer();
+
+        try {
+          // This mirrors your “load + query params” logic, but uses the current URL we just updated.
+          const storefront = new Flipp.Storefront({
+            accessToken: getQueryParam("accessToken", accessToken),
+            merchantId: getQueryParam("merchantId", merchantId),
+            merchantNameIdentifier: getQueryParam("merchantNameIdentifier", merchantNameIdentifier),
+            
+            analyticsDelegate: {
+                onEngagement: analyticsEngagement,
+                onItemClick: analyticsItemClick,
+                onItemView: analyticsItemView,
+                onOpen: analyticsOpen,
+                onFlyerView: analyticsFlyerView,
+
+            },
+            cartDelegate: {
+              getCartOptions: getMerchantCartOptions,
+              addToCart: addToMerchantCart,
+              getCurrentQuantity: getCurrentQuantityLogger,
+            },
+            itemDetailsDelegate: {
+              getCustomElements: getCustomElements,
+            },
+          });
+
+          storefront.setDelegate("cartDelegate", {
+            getCartOptions: getMerchantCartOptions,
+            addToCart: addToMerchantCart,
+          });
+
+          storefront.setDelegate("itemDetailsDelegate", {
+            getCustomElements: getCustomElements,
+          });
+
+          storefront.renderStorefront(flippContainer);
+
+          setStatus("ok", "Rendered");
+          hint.textContent = `URL updated. (${shareUrl})`;
+        } catch (e) {
+          console.error(e);
+          setStatus("err", "Render failed");
+          hint.textContent = "Open DevTools console for details.";
+        }
+      }
+
+      // ---------- Init ----------
+      window.addEventListener("load", () => {
+        // Prefill fields from query params (or your defaults)
+        document.getElementById("accessToken").value = getQueryParam(
+          "accessToken",
+          ""
+        );
+        document.getElementById("merchantId").value = getQueryParam("merchantId", "");
+        document.getElementById("merchantNameIdentifier").value = getQueryParam(
+          "merchantNameIdentifier",
+          ""
+        );
+
+        document.getElementById("renderBtn").addEventListener("click", renderStorefrontFromInputs);
+
+        document.getElementById("copyLinkBtn").addEventListener("click", async () => {
+          const accessToken = document.getElementById("accessToken").value.trim();
+          const merchantId = document.getElementById("merchantId").value.trim();
+          const merchantNameIdentifier = document.getElementById("merchantNameIdentifier").value.trim();
+          const hint = document.getElementById("hint");
+
+          if (!accessToken || !merchantId || !merchantNameIdentifier) {
+            setStatus("err", "Missing required inputs");
+            hint.textContent = "Fill all three fields first.";
+            return;
+          }
+
+          const url = setQueryParams({ accessToken, merchantId, merchantNameIdentifier });
+          try {
+            await navigator.clipboard.writeText(url);
+            setStatus("ok", "Link copied");
+            hint.textContent = "Copied to clipboard.";
+          } catch {
+            setStatus("", "Copy failed");
+            hint.textContent = url;
+          }
+        });
+
+        // Auto-render once on load (comment this out if you want manual-only)
+        renderStorefrontFromInputs();
+      });
+    </script>
+
+    <script>
+(() => {
+  if (window.__netwatchInstalled) return;
+  window.__netwatchInstalled = true;
+
+  // ---------------- Config ----------------
+  const MAX_ROWS = 200;
+  const IGNORE_URLS = new Set([
+    "https://p.flipp.com/beacons",
+  ]);
+
+  // ---------------- State ----------------
+  let seq = 0;
+  const records = new Map();
+  const state = { paused: false };
+
+  // ---------------- Helpers ----------------
+  const toAbsUrl = (u) => {
+    try { return new URL(String(u), location.href).href; } catch { return String(u); }
+  };
+
+  const shouldIgnore = (urlLike) => {
+    const abs = toAbsUrl(urlLike);
+    return IGNORE_URLS.has(abs);
+  };
+
+  const isPlainObject = (v) => Object.prototype.toString.call(v) === "[object Object]";
+
+  const safeStringify = (v) => {
+    try {
+      if (typeof v === "string") return v;
+      if (v == null) return "";
+      return JSON.stringify(v, null, 2);
+    } catch {
+      try { return String(v); } catch { return "[unprintable]"; }
+    }
+  };
+
+  const describeBody = async (body) => {
+    if (body == null) return null;
+    if (typeof body === "string") return body;
+
+    if (typeof URLSearchParams !== "undefined" && body instanceof URLSearchParams) {
+      return body.toString();
+    }
+
+    if (typeof FormData !== "undefined" && body instanceof FormData) {
+      const parts = [];
+      for (const [k, v] of body.entries()) {
+        if (typeof File !== "undefined" && v instanceof File) {
+          parts.push(`${k} = [File name="${v.name}", type="${v.type || "unknown"}", size=${v.size}]`);
+        } else {
+          parts.push(`${k} = ${String(v)}`);
+        }
+      }
+      return parts.join("\n");
+    }
+
+    if (typeof Blob !== "undefined" && body instanceof Blob) {
+      const size = body.size;
+      const type = body.type || "unknown";
+      if (size <= 256 * 1024) {
+        try { return await body.text(); } catch {}
+      }
+      return `[Blob type="${type}", size=${size}]`;
+    }
+
+    if (body instanceof ArrayBuffer) return `[ArrayBuffer byteLength=${body.byteLength}]`;
+    if (ArrayBuffer.isView && ArrayBuffer.isView(body)) return `[TypedArray byteLength=${body.byteLength}]`;
+
+    if (typeof ReadableStream !== "undefined" && body instanceof ReadableStream) {
+      return "[stream body not captured]";
+    }
+
+    if (isPlainObject(body)) return safeStringify(body);
+
+    try { return String(body); } catch { return "[unprintable body]"; }
+  };
+
+  const describeResponseBody = async (resp) => {
+    try {
+      const txt = await resp.clone().text();
+      return txt.length ? txt : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // ---------------- UI: main list panel ----------------
+  const panel = document.createElement("div");
+  panel.style.cssText = `
+    position: fixed; left: 12px; bottom: 12px;
+    width: min(720px, calc(100vw - 24px));
+    height: min(55vh, 420px);
+    min-width: 340px;
+    min-height: 180px;
+    z-index: 2147483647;
+    background: rgba(20,20,22,0.92);
+    color: #eaeaea;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    overflow: hidden;
+    font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    backdrop-filter: blur(8px);
+    resize: both;
+  `;
+
+  const header = document.createElement("div");
+  header.style.cssText = `
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.03);
+    user-select: none;
+    cursor: move;
+  `;
+
+  const title = document.createElement("div");
+  title.textContent = "API calls";
+  title.style.cssText = `font-weight: 700; letter-spacing: 0.2px;`;
+
+  const controls = document.createElement("div");
+  controls.style.cssText = `display:flex; gap:6px; align-items:center;`;
+
+  const mkBtn = (label) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = label;
+    b.style.cssText = `
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.06);
+      color: inherit;
+      padding: 4px 8px;
+      border-radius: 10px;
+      font: inherit;
+    `;
+    b.onmouseenter = () => (b.style.background = "rgba(255,255,255,0.10)");
+    b.onmouseleave = () => (b.style.background = "rgba(255,255,255,0.06)");
+    return b;
+  };
+
+  const pauseBtn = mkBtn("Pause");
+  const clearBtn = mkBtn("Clear");
+  const closeBtn = mkBtn("×");
+  closeBtn.style.cssText += `font-weight: 900; width: 30px; padding: 2px 0;`;
+
+  controls.append(pauseBtn, clearBtn, closeBtn);
+  header.append(title, controls);
+
+  const body = document.createElement("div");
+  body.style.cssText = `
+    height: calc(100% - 40px);
+    overflow: auto;
+    padding: 8px 10px 10px;
+  `;
+
+  const list = document.createElement("ol");
+  list.style.cssText = `
+    margin: 0;
+    padding-left: 18px;
+    display: grid;
+    gap: 6px;
+  `;
+
+  body.appendChild(list);
+  panel.append(header, body);
+  document.documentElement.appendChild(panel);
+
+  // Drag main panel
+  let drag = null;
+  header.addEventListener("mousedown", (e) => {
+    if (e.target.tagName === "BUTTON") return;
+    drag = { x: e.clientX, y: e.clientY, r: panel.getBoundingClientRect() };
+    e.preventDefault();
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    const dy = e.clientY - drag.y;
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
+    panel.style.left = `${Math.max(8, drag.r.left + dx)}px`;
+    panel.style.top = `${Math.max(8, drag.r.top + dy)}px`;
+  });
+  window.addEventListener("mouseup", () => { drag = null; });
+
+  pauseBtn.onclick = () => {
+    state.paused = !state.paused;
+    pauseBtn.textContent = state.paused ? "Resume" : "Pause";
+  };
+  clearBtn.onclick = () => {
+    records.clear();
+    list.innerHTML = "";
+  };
+  closeBtn.onclick = () => panel.remove();
+
+  // ---------------- Details window ----------------
+  const openDetailWindow = (recId) => {
+    const rec = records.get(recId);
+    if (!rec) return;
+
+    const win = document.createElement("div");
+    win.style.cssText = `
+      position: fixed; left: 20px; top: 14px;
+      width: min(780px, calc(100vw - 28px));
+      height: min(65vh, 520px);
+      min-width: 360px;
+      min-height: 220px;
+      z-index: 2147483647;
+      background: rgba(18,18,20,0.94);
+      color: #eaeaea;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 14px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.55);
+      overflow: hidden;
+      font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      backdrop-filter: blur(8px);
+      resize: both;
+    `;
+
+    const h = document.createElement("div");
+    h.style.cssText = `
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 10px;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      user-select: none;
+      cursor: move;
+    `;
+
+    const t = document.createElement("div");
+    t.textContent = rec.url;
+    t.title = rec.url;
+    t.style.cssText = `
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    `;
+
+    const close = mkBtn("×");
+    close.style.cssText += `font-weight:900; width: 30px; padding: 2px 0;`;
+    h.append(t, close);
+
+    const tabs = document.createElement("div");
+    tabs.style.cssText = `
+      display:flex; gap: 6px;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+    `;
+
+    const tabBtn = (label) => {
+      const b = mkBtn(label);
+      b.style.cssText += `padding: 6px 10px; border-radius: 999px;`;
+      return b;
+    };
+
+    const reqTab = tabBtn("Request");
+    const resTab = tabBtn("Response");
+    tabs.append(reqTab, resTab);
+
+    const contentWrap = document.createElement("div");
+    contentWrap.style.cssText = `
+      height: calc(100% - 40px - 43px);
+      overflow: auto;
+      padding: 10px;
+    `;
+
+    const pre = document.createElement("pre");
+    pre.style.cssText = `
+      margin:0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    `;
+    contentWrap.appendChild(pre);
+
+    win.append(h, tabs, contentWrap);
+    document.documentElement.appendChild(win);
+
+    // Drag details window
+    let d2 = null;
+    h.addEventListener("mousedown", (e) => {
+      if (e.target.tagName === "BUTTON") return;
+      d2 = { x: e.clientX, y: e.clientY, r: win.getBoundingClientRect() };
+      e.preventDefault();
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (!d2) return;
+      const dx = e.clientX - d2.x;
+      const dy = e.clientY - d2.y;
+      win.style.left = `${Math.max(8, d2.r.left + dx)}px`;
+      win.style.top = `${Math.max(8, d2.r.top + dy)}px`;
+    });
+    window.addEventListener("mouseup", () => { d2 = null; });
+
+    close.onclick = () => win.remove();
+
+    const setActive = (which) => {
+      const activeCss = `background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.26);`;
+      const normalCss = `background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.18);`;
+
+      // reset styles (simple)
+      reqTab.style.background = "rgba(255,255,255,0.06)";
+      reqTab.style.borderColor = "rgba(255,255,255,0.18)";
+      resTab.style.background = "rgba(255,255,255,0.06)";
+      resTab.style.borderColor = "rgba(255,255,255,0.18)";
+
+      if (which === "request") {
+        reqTab.style.cssText += activeCss;
+        const rb = rec.requestBody ? rec.requestBody : "no request body";
+        pre.textContent = rb;
+        win.__netwatch_showing = "request";
+      } else {
+        resTab.style.cssText += activeCss;
+        const statusLine = (typeof rec.status === "number") ? `Status: ${rec.status}` : "Status: (pending)";
+        const errLine = rec.error ? `\nError: ${rec.error}` : "";
+        const respBody = rec.responseBody ? rec.responseBody : "no response body";
+        pre.textContent = `${statusLine}${errLine}\n\n${respBody}`;
+        win.__netwatch_showing = "response";
+      }
+    };
+
+    reqTab.onclick = () => setActive("request");
+    resTab.onclick = () => setActive("response");
+    setActive("request");
+
+    // Live update while open
+    const interval = setInterval(() => {
+      if (!document.body.contains(win)) { clearInterval(interval); return; }
+      const latest = records.get(recId);
+      if (!latest) return;
+
+      t.textContent = latest.url;
+      t.title = latest.url;
+
+      if (win.__netwatch_showing === "response") {
+        const statusLine = (typeof latest.status === "number") ? `Status: ${latest.status}` : "Status: (pending)";
+        const errLine = latest.error ? `\nError: ${latest.error}` : "";
+        const respBody = latest.responseBody ? latest.responseBody : "no response body";
+        pre.textContent = `${statusLine}${errLine}\n\n${respBody}`;
+      } else {
+        pre.textContent = latest.requestBody ? latest.requestBody : "no request body";
+      }
+    }, 250);
+  };
+
+  // ---------------- List inserts ----------------
+  const addRecordToList = (rec) => {
+    if (state.paused) return;
+
+    const li = document.createElement("li");
+    li.textContent = rec.url;
+    li.title = "Click for details (request/response).";
+    li.style.cssText = `
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      opacity: 0.95;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+    `;
+    li.onmouseenter = () => (li.style.background = "rgba(255,255,255,0.06)");
+    li.onmouseleave = () => (li.style.background = "rgba(255,255,255,0.03)");
+    li.onclick = () => openDetailWindow(rec.id);
+
+    list.appendChild(li);
+    while (list.children.length > MAX_ROWS) list.removeChild(list.firstChild);
+    body.scrollTop = body.scrollHeight;
+  };
+
+  const createRecord = (url, kind) => {
+    const absUrl = toAbsUrl(url);
+    if (IGNORE_URLS.has(absUrl)) return null;
+
+    const id = ++seq;
+    const rec = {
+      id,
+      kind, // "fetch" | "xhr"
+      url: absUrl,
+      requestBody: null,
+      status: undefined,
+      responseBody: null,
+      error: null
+    };
+    records.set(id, rec);
+
+    // Cap memory
+    if (records.size > MAX_ROWS * 3) {
+      const oldest = Math.min(...records.keys());
+      records.delete(oldest);
+    }
+
+    addRecordToList(rec);
+    return rec;
+  };
+
+  // ---------------- Hook fetch ----------------
+  const origFetch = window.fetch;
+  if (typeof origFetch === "function") {
+    window.fetch = function(input, init) {
+      let url;
+      try {
+        url = (input && typeof input === "object" && "url" in input) ? input.url : input;
+      } catch {
+        url = "[unknown fetch url]";
+      }
+
+      if (shouldIgnore(url)) return origFetch.apply(this, arguments);
+
+      const rec = createRecord(url, "fetch");
+
+      (async () => {
+        if (!rec) return;
+        try {
+          if (init && "body" in init) {
+            rec.requestBody = await describeBody(init.body);
+            return;
+          }
+          if (typeof Request !== "undefined" && input instanceof Request) {
+            try {
+              const txt = await input.clone().text();
+              rec.requestBody = txt || null;
+            } catch {
+              rec.requestBody = null;
+            }
+          }
+        } catch {
+          rec.requestBody = null;
+        }
+      })();
+
+      return origFetch.apply(this, arguments).then(async (resp) => {
+        if (rec) {
+          try {
+            rec.status = resp.status;
+            rec.responseBody = await describeResponseBody(resp);
+          } catch {}
+        }
+        return resp;
+      }).catch((err) => {
+        if (rec) rec.error = (err && err.message) ? err.message : String(err);
+        throw err;
+      });
+    };
+  }
+
+  // ---------------- Hook XHR ----------------
+  const origOpen = XMLHttpRequest.prototype.open;
+  const origSend = XMLHttpRequest.prototype.send;
+
+  XMLHttpRequest.prototype.open = function(method, url) {
+    if (shouldIgnore(url)) {
+      this.__netwatch_ignore = true;
+      this.__netwatch_rec = null;
+    } else {
+      try {
+        this.__netwatch_ignore = false;
+        this.__netwatch_rec = createRecord(url, "xhr");
+        if (this.__netwatch_rec) this.__netwatch_rec.method = method;
+      } catch {
+        this.__netwatch_rec = null;
+      }
+    }
+    return origOpen.apply(this, arguments);
+  };
+
+  XMLHttpRequest.prototype.send = function(body) {
+    if (this.__netwatch_ignore) return origSend.apply(this, arguments);
+
+    const rec = this.__netwatch_rec;
+
+    (async () => {
+      if (!rec) return;
+      try { rec.requestBody = await describeBody(body); } catch { rec.requestBody = null; }
+    })();
+
+    if (rec) {
+      const xhr = this;
+      const done = () => {
+        try {
+          rec.status = xhr.status;
+          if (!xhr.responseType || xhr.responseType === "text") {
+            const txt = xhr.responseText;
+            rec.responseBody = (txt && String(txt).length) ? String(txt) : null;
+          } else {
+            const r = xhr.response;
+            if (r == null) rec.responseBody = null;
+            else if (typeof r === "string") rec.responseBody = r || null;
+            else if (r instanceof ArrayBuffer) rec.responseBody = `[ArrayBuffer byteLength=${r.byteLength}]`;
+            else if (typeof Blob !== "undefined" && r instanceof Blob) rec.responseBody = `[Blob type="${r.type || "unknown"}", size=${r.size}]`;
+            else rec.responseBody = safeStringify(r);
+          }
+        } catch (e) {
+          rec.error = (e && e.message) ? e.message : String(e);
+        }
+      };
+
+      if (!xhr.__netwatch_bound) {
+        xhr.__netwatch_bound = true;
+        xhr.addEventListener("loadend", done);
+        xhr.addEventListener("error", () => { rec.error = rec.error || "XHR error"; });
+        xhr.addEventListener("abort", () => { rec.error = rec.error || "XHR aborted"; });
+      }
+    }
+
+    return origSend.apply(this, arguments);
+  };
+
+})();
+</script>
+
+
+  </body>
+</html>
